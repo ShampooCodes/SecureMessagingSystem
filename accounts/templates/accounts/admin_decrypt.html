@@ -1,14 +1,6 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Admin - Decrypt Messages</title>
-        <link rel="stylesheet" href="{% static 'accounts/styke.css %}">
-    </head>
-    <body>
-        <div class="auth-container">
-            <div class="auth-box">
+{% extends "accounts/base.html" %}
+{% block title %}Decrypt Messages{% endblock %}
+{% block content %}
                 <h1>Decrypt Conervation </h1>
                 <p class="subtitle"> {{user1}} &amp; {{user2}}</p>
 
@@ -16,7 +8,7 @@
                 <p>{{ error }}</p>
                 {% endif %}
 
-                <form methid ="post">
+                <form method ="post">
                     {% csrf_token %}
                     <input type="hidden" name="user1" value="{{ user1 }}">
                     <input type="hidden " name="user2" value="{{ user2 }}">
@@ -29,11 +21,11 @@
                 {% if decrypted %}
                     <h2>Decrypted Messages</h2>
                     {% for m in decrypted %}
-                    <p><strong>{{ m.sender }}</strong> -> <strong> {{ m.receiver }}</strong>
+                    <p><strong>{{ m.sender }}</strong> -> <strong> {{ m.receiver }}</strong>: {{ m.text }} ({{m.timestamp}})</p>
+
+                    {% endfor %}
+
                     {% endif %}
 
                     <p class="botton-text"><a href="{% url 'admin_check_messages' %}"> Back</a></p>
-            </div>
-        </div>
-    </body>
-</html>
+{% endblock %}

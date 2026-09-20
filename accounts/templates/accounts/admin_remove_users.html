@@ -1,0 +1,20 @@
+{% extends "accounts/base.html" %}
+{% block title %}Remove Users{% endblock %}
+{% block content %}
+            <h1>Remove Users</h1>
+
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                    <label for="username">Select a user</label>
+                    <select name="username" id="username">
+                        <option value="">-- choose --</option>
+                        {% for u in users %}
+                        <option value ="{{ u.username}}"> {{u.username}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit">Remove User</button>
+            </form>
+{% endblock %}

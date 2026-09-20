@@ -1,35 +1,20 @@
-{% load static %}
+{% extends "accounts/base.html" %}
+{% block title %}Create Account {% endblock %}
+{% block content %}
+            {% if not submitted_username %}
+                <h1>Create Account</h1>
+                <p class="subtitle">Create your account to get started</p>
+                <form method="post">
+                    {% csrf_token %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account</title>
-    <link rel="stylesheet" href="{% static 'accounts/style.css' %}">
-</head>
-<body class="auth-page">
-    <main class="auth-container">
-        <section class="auth-logo">
-            <div class="logo">S</div> 
-            <p class="eyebrow">SECURE MESSAGING SYSTEM</p> 
-            <h1> Your space.<br> <span>Your privacy.</span></h1> 
-            <p class="description">
-                Create your account and join a private
-                communication space built around secure messaging. 
-            </p>
-            <div class="security-note"> 
-                <span class="security-dot"></span> 
-                <span>Registration requires approval</span> 
-            </div>
-        </section>
-        <section class="auth-panel">
-            <div class="auth-box">
-                {% if not submitted_username %}
-                    <div class="auth-heading">
-                        <p class="eyebrow">GET STARTED</p>
-                        <h1>Create Account</h1>
-                        <p>Your account will be reviewed by an administrator.</p>
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username">
+                    </div>
+            
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password">
                     </div>
 
                     {% if messages %}
@@ -110,11 +95,7 @@
                 {% endif %}
             </div>
 
-            <div class="auth-status">
-                <span class="status-icon">◆</span> 
-                <span>Secure connection</span> 
-            </div>
-        </section>
-    </main>
-</body>
-</html>
+                    
+                </script>
+            {% endif %}
+{% endblock %}

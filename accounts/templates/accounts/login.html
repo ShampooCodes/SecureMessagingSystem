@@ -1,27 +1,10 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signin</title>
-    <link rel="stylesheet" href="{% static 'accounts/style.css' %}">
-</head>
-<body class="auth-page">
-    <main class="auth-container">
-        <section class="auth-logo">
-            <div class="logo">S</div>
-            <p class="eyebrow">Secure MESSAGING SYSTEM</p>
-            <h1>Conversation <br> <span>stay private.</span></h1>
-            <p class="description">
-                A private space for secure communication.
-                Your messages are protected from the moment you send them.
-            </p>
-            <div class="security-note">
-                <span class="security-dot"></span>
-                <span>Protected communication channel</span>
-            </div>
-        </section>
+{% extends "accounts/base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Login to your account</p>
+            <form method="post">
+                {% csrf_token %}
 
         <section class="auth-panel">
             <div class="auth-box">
@@ -69,11 +52,8 @@
                 </div>
             </div>
 
-            <div class="auth-status">
-                <span class="status-icon">◆</span>
-                <span>Secure connection</span>
-            </div>
-        </section>
-    </main>
-</body>
-</html>
+            <p class="bottom-text">
+                Don't have an account?
+                <a href="{% url 'signup' %}">Create account</a>
+            </p>
+{% endblock %}

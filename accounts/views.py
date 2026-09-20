@@ -8,6 +8,8 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.contrib.auth import update_session_auth_hash
+
 
 
 # Create your views here.
@@ -18,8 +20,12 @@ def signup(request):
         password = request.POST.get('password')
         age= request.POST.get('age')
 
-        if username == "" or password == "":
+        if username == "" or password == "" or age == "":
             messages.error(request, "Please fill all the fields")
+            return render(request, 'accounts/signup.html')
+
+        if not age.isdigit() or int(age) <= 0 or int(age) > 120:
+            messages.error(request, "Age must be a valid number")
             return render(request, 'accounts/signup.html')
 
         user_exist = User.objects.filter(username=username).first()
@@ -79,6 +85,8 @@ def admin_verify(request):
             req.status = "DENIED"
             req.save()
             messages.info(request,f"{req.username} denied.")
+        else:
+            messages.error(request,"Invalid Action")
 
         return redirect("admin_verify")
 
@@ -97,7 +105,11 @@ def login(request):
         user= authenticate(request,username=username, password=password)
 
         if user is None:
-            messages.error(request, "Invalid username or password")
+            pending = RegistrationRequest.objects.filter(username=username, status="PENDING").first()
+            if pending:
+                messages.error(request,"Your accpunt is still waiting for approval ")
+            else:
+                messages.error(request, "Invalid username or password")
             return render (request, 'accounts/login.html')
 
         auth_login(request, user)
@@ -111,12 +123,16 @@ def home(request):
 
 @login_required
 def user_list(request):
-    users = User.objects.exclude(pk=request.user.pk).exclude(profile__role="admin")
-    return render(request, "accounts/user_list.html", {"users":users})
+    query = request.GET.get('q', '')
+    users = User.objects.exclude(pk=request.user.pk).exclude(profile__role="admin").exclude(is_superuser=True)
+
+    if query:
+        users= users.filter(username__icontains=query)
+    return render(request, "accounts/user_list.html", {"users":users, "query": query})
 
 @login_required
 def send_messages(request, username):
-    receiver = User.objects.filter(username=username).first()
+    receiver = User.objects.filter(username=username).exclude(profile__role='admin').exclude(is_superuser=True).first()
     if receiver is None:
         messages.error(request, "user not found")
         return redirect("user_list")
@@ -127,9 +143,11 @@ def send_messages(request, username):
             encrypted = crypto.encrypt_message(text, settings.MESSAGE_VAULT_PASSWORD)
             Message.objects.create(sender=request.user, receiver=receiver, encrypted_text=encrypted)
             messages.success(request, "Message sent.")
+        else:
+            messages.error(request, "Message cannot be empty")
         return redirect("send_message", username=username)
 
-    return render(request,"accounts/send_messages.html", {"receiver": receiver})
+    return render(request,"accounts/send_message.html", {"receiver": receiver})
 
 @login_required
 def inbox(request):
@@ -150,7 +168,7 @@ def admin_check_messages(request):
         messages.error(request, "Access denied.")
         return redirect("login")
 
-    users = User.objects.exclude(profile__role="admin").order_by("username")
+    users = User.objects.exclude(profile__role="admin").exclude(is_superuser=True).order_by("username")
 
     conversation = None 
     user1 = request.GET.get("user1")
@@ -164,6 +182,8 @@ def admin_check_messages(request):
             sender__username=user2, receiver__username=user1
         )
         conversation = conversation.order_by("timestamp")
+    elif user1 and user2 and user1 == user2:
+        messages.error(request,"Please select two different users")
 
     return render(request, "accounts/admin_check_messages.html", {
         "users": users, "conversation": conversation, "user1": user1, "user2":user2,
@@ -179,6 +199,11 @@ def admin_decrypt_messages(request):
 
     user1 = request.GET.get("user1") or request.POST.get("user1")
     user2 = request.GET.get("user2") or request.POST.get("user2")
+
+    if not user1 or not user2:
+        messages.error(request, "Please select two users first.")
+        return redirect("admin_check_messages")
+
     decrypted = None
     error = None
 
@@ -210,5 +235,60 @@ def admin_decrypt_messages(request):
         "user1": user1, "user2": user2, "decrypted": decrypted, "error": error,
     })
 
-def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+@login_required
+def admin_remove_users(request):
+    if request.user.profile.role != "admin":
+        messages.error(request, "Access denied.")
+        return redirect("login")
+
+    status = None
+
+    if request.method == "POST":
+        username = request.POST.get('username')
+        user_to_remove = User.objects.filter(username=username).exclude(profile__role="admin").exclude(is_superuser=True).first()
+        if not user_to_remove:
+            messages.error(request, "Select a valid user")
+        else:
+            user_to_remove.delete()
+            messages.success(request, "User removed successfully")
+            status = "User removed suceessfully"
+
+    users = User.objects.exclude(profile__role="admin").exclude(is_superuser=True).order_by("username")
+    return render(request, "accounts/admin_remove_users.html", {"users": users, "status": status})
+
+@login_required
+def profile_view(request):
+    profile = request.user.profile
+
+    if request.method == "POST":
+        age = request.POST.get('age')
+
+        if not age.isdigit() or int(age) <= 0 or int(age) > 120:
+            messages.error(request, "Please enter a valid age")
+        else:
+            profile.age = age
+            profile.save()
+            messages.success(request,"Age updated successfully")
+        return redirect("profile")
+
+    return render(request, "accounts/profile.html", {"profile": profile})
+
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        if not request.user.check_password(old_password):
+            messages.error(request,"Old password is incorrect")
+            return redirect("change_password")
+
+        if new_password == "":
+            messages.error(request, "New passeord cannot be empty")
+            return redirect("change_password")
+        
+        request.user.set_password(new_password)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+        messages.success(request, "Password changed successfully")
+        return redirect("profile")
+    return render(request, "accounts/change_password.html")
