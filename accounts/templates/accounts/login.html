@@ -26,13 +26,13 @@
         <section class="auth-panel">
             <div class="auth-box">
                 <div class="auth-heading">
-                    <p class="eyebrow">WELCOM BACK</p>
+                    <p class="eyebrow">WELCOME BACK</p>
                     <h2>Sign in</h2>
                     <p>Enter your credentials to continue</p>
                 </div>
 
                 {% if messages %}
-                    <div class="from-messages">
+                    <div class="form-messages">
                         {% for message in messages %}
                             <div class="message message-{{ message.tags}}">
                                 {{ message}}
