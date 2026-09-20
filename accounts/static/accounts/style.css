@@ -6,6 +6,17 @@
     box-sizing: border-box;
 }
 
+:root{
+    --bg: #0b0d0c;
+    --panel: #111412;
+    --card: #171b18;
+    --border: #2a302c;
+    --text: #f1f3ee;
+    --muted: #929992;
+    --accent: #c8ff52;
+    --accent-dark: #a9dd3d;
+    --danger: #ff6b6b;
+}
 .navbar {
     display: flex;
     gap: 15px;
@@ -135,7 +146,7 @@ body{
     margin-bottom: 34px;
 }
 
-.auth-heading h2{
+.auth-heading h1{
     font-family: "Space Grotesk", sans-serif;
     margin-bottom: 9px;
     font-size: 42px;
@@ -285,6 +296,7 @@ body{
     height: 66px;
     display: flex;
     align-items: center;
+    justify-content: center;
     margin: 0 auto 28px;
     border: 1px solid rgba(200, 255, 82, 0.4);
     border-radius: 50%;
